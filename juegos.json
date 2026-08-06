@@ -3,9 +3,7 @@
     "nombre": "test",
     "version": "1",
     "url": "https://archive.org/download/test.tar_202608/test.tar.gz",
-    "ejecutable": "test.txt",
-    "mirrors": [
-      "https://archive.org/download/test.tar_202608/test.tar.gz"
-    ]
+    "ejecutable": "test",
+    "mirrors": []
   }
 }
