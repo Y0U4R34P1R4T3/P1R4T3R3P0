@@ -2,10 +2,10 @@
   "test": {
     "nombre": "test",
     "version": "1",
-    "url": "https://archive.org/details/test.tar_202608",
-    "ejecutable": "",
+    "url": "https://archive.org/download/test.tar_202608/test.tar.gz",
+    "ejecutable": "test.bin",
     "mirrors": [
-      "https://archive.org/details/test.tar_202608"
+      "https://archive.org/download/test.tar_202608/test.tar.gz"
     ]
   }
 }
