@@ -1,0 +1,11 @@
+{
+  "test": {
+    "nombre": "Test N°1",
+    "version": "1",
+    "url": "https://archive.org/details/test.tar_202608",
+    "ejecutable": "",
+    "mirrors": [
+      "https://archive.org/details/test.tar_202608"
+    ]
+  }
+}
