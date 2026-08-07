@@ -8,7 +8,7 @@ import webbrowser
 
 # Configura la URL directa a tu JSON en GitHub Pages
 REPO_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/juegos.json"
-GITHUB_ISSUES_URL = "https://github.com/Y0U4R34P1R4T3/P1R4T3R3P0/issues"
+GITHUB_ISSUES_URL = f"https://github.com/Y0U4R34P1R4T3/P1R4T3R3P0/issues/new?title={title}"
 
 # Carpetas de datos locales
 DATA_DIR = os.path.expanduser("~/.local/share/pirate")
