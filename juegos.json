@@ -1,13 +1,7 @@
 {
-  "test": {
-    "nombre": "test",
-    "version": "1",
-    "url": "https://archive.org/download/test.tar_202608/test.tar.gz",
-    "ejecutable": "test",
-    "mirrors": []
-  },
   "Castle Crashers": {
     "nombre": "Castle Crashers",
+    "tipo": "juego",
     "version": "3.2 hotfix | Full Version + All DLCs",
     "url": "https://archive.org/download/204360/Castle.Crashers-SteamRIP.com.rar",
     "ejecutable": "castle.exe",
