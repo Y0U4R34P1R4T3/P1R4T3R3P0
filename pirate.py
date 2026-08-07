@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import time
 import os
 import json
 import urllib.request
@@ -81,32 +82,35 @@ def list_juegos():
     listar_catalogo_generico(LOCAL_CATALOG, "Juegos")
 
 def update_catalogo():
-    """[pirate update] Descarga la última versión del catálogo y del script."""
+    """[pirate update] Descarga la última versión del catálogo y del propio script."""
     asegurar_carpetas()
-    print("[*] Actualizando catálogo de juegos...")
+    print("[*] Leyendo listas de juegos desde el repositorio...")
+    
+    # Parámetro único para saltarse la caché de GitHub Raw
+    cache_buster = f"?t={int(time.time())}"
+
     try:
-        req = urllib.request.urlopen(REPO_URL)
+        # 1. Actualizar catálogo de juegos
+        req = urllib.request.urlopen(REPO_URL + cache_buster)
         data = req.read().decode('utf-8')
         with open(LOCAL_CATALOG, 'w', encoding='utf-8') as f:
             f.write(data)
-        print("[✓] Catálogo de juegos actualizado correctamente.")
-    except Exception as e:
-        print(f"[X] Error al actualizar el catálogo: {e}")
+        print("[✓] Catálogo de juegos actualizado.")
 
-    # Auto-actualización del script pirate.py
-    print("[*] Verificando actualizaciones de la herramienta...")
-    try:
-        req_script = urllib.request.urlopen(SCRIPT_URL)
+        # 2. Auto-actualizar pirate.py
+        print("[*] Verificando actualizaciones del script...")
+        script_url = f"https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/pirate.py{cache_buster}"
+        req_script = urllib.request.urlopen(script_url)
         script_data = req_script.read().decode('utf-8')
-        
+
         binary_path = os.path.expanduser("~/.local/bin/pirate")
-        if os.path.exists(binary_path):
-            with open(binary_path, 'w', encoding='utf-8') as f:
-                f.write(script_data)
-            os.chmod(binary_path, 0o755)
-            print("[✓] ¡Herramienta pirate actualizada a la última versión!")
+        with open(binary_path, 'w', encoding='utf-8') as f:
+            f.write(script_data)
+        os.chmod(binary_path, 0o755)
+        print("[✓] Script pirate.py actualizado a la última versión de GitHub.")
+
     except Exception as e:
-        print(f"[!] No se pudo actualizar el script automáticamente: {e}")
+        print(f"[X] Error al actualizar: {e}")
 
 def search_juegos(query=""):
     """[pirate search] Busca un juego en el catálogo local."""
