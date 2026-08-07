@@ -22,12 +22,18 @@ MOVIES_DIR = os.path.join(PIRATE_DIR, "Movies")
 DATA_DIR = os.path.expanduser("~/.local/share/pirate")
 LOCAL_CATALOG = os.path.join(DATA_DIR, "juegos.json")
 INSTALLED_GAMES_FILE = os.path.join(DATA_DIR, "installed.json")
+WELCOME_FLAG_FILE = os.path.join(DATA_DIR, ".welcome_done")
 
 def asegurar_carpetas():
-    """Crea la estructura de carpetas si no existen."""
+    """Crea la estructura de carpetas y muestra el mensaje de bienvenida en la primera instalación."""
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(GAMES_DIR, exist_ok=True)
     os.makedirs(MOVIES_DIR, exist_ok=True)
+
+    if not os.path.exists(WELCOME_FLAG_FILE):
+        print("💀 Bienvenido al barco, marinero! He creado este repositorio para que puedas descargar juegos, películas y series! Puedes utilizar el comando 'pirate' para ver el listado de comandos! Suerte recorriendo estos mares, marinero...\n")
+        with open(WELCOME_FLAG_FILE, 'w', encoding='utf-8') as f:
+            f.write("1")
 
 def cargar_catalogo_local():
     """Carga el JSON descargado localmente e informa errores detallados de sintaxis."""
@@ -48,47 +54,64 @@ def cargar_catalogo_local():
 
 # --- COMANDOS ---
 
-def listar_catalogo_generico(archivo_json, tipo_contenido):
-    """Función genérica para listar cualquier categoría (Juegos, Películas, Series)."""
+def listar_catalogo_generico(archivo_json, tipo_filtro=None, titulo_categoria="Contenido"):
+    """Función genérica para listar y filtrar por la propiedad 'tipo' del JSON."""
     if not os.path.exists(archivo_json):
-        print(f"[!] No se encontró el catálogo de {tipo_contenido}. Ejecutá 'pirate update' primero.")
+        print(f"[!] No se encontró el catálogo. Ejecutá 'pirate update' primero.")
         return
 
     try:
         with open(archivo_json, 'r', encoding='utf-8') as f:
             catalogo = json.load(f)
     except Exception as e:
-        print(f"[X] Error al leer el catálogo de {tipo_contenido}: {e}")
+        print(f"[X] Error al leer el catálogo de {titulo_categoria}: {e}")
         return
 
-    print(f"\n=== CATÁLOGO DE {tipo_contenido.upper()} DISPONIBLES ===")
+    print(f"\n=== CATÁLOGO DE {titulo_categoria.upper()} DISPONIBLES ===")
     if not catalogo:
         print(" No hay elementos en el catálogo.")
         return
 
+    encontrados = 0
     for key, info in catalogo.items():
-        nombre = info.get('nombre', key)
-        version = info.get('version', '')
-        version_str = f" (v{version})" if version else ""
-        print(f" • [{key}] -> {nombre}{version_str}")
+        tipo_item = info.get('tipo', 'juego').lower()
+        
+        # Si tipo_filtro es None se muestran todos, de lo contrario filtra por categoría
+        if tipo_filtro is None or tipo_item == tipo_filtro.lower():
+            nombre = info.get('nombre', key)
+            version = info.get('version', '')
+            version_str = f" (v{version})" if version else ""
+            tag_tipo = f" [{tipo_item.capitalize()}]" if tipo_filtro is None else ""
+            print(f" • [{key}]{tag_tipo} -> {nombre}{version_str}")
+            encontrados += 1
+
+    if encontrados == 0:
+        print(f" No hay elementos en la categoría '{titulo_categoria}'.")
     print()
 
 def list_juegos():
-    """[pirate listgames] Muestra el catálogo completo de juegos."""
-    listar_catalogo_generico(LOCAL_CATALOG, "Juegos")
+    """[pirate listgames] Muestra solo los juegos."""
+    listar_catalogo_generico(LOCAL_CATALOG, tipo_filtro="juego", titulo_categoria="Juegos")
+
+def list_movies():
+    """[pirate listmovies] Muestra solo las películas."""
+    listar_catalogo_generico(LOCAL_CATALOG, tipo_filtro="pelicula", titulo_categoria="Películas")
+
+def list_series():
+    """[pirate listseries] Muestra solo las series."""
+    listar_catalogo_generico(LOCAL_CATALOG, tipo_filtro="serie", titulo_categoria="Series")
 
 def list_all():
-    """[pirate listall] Muestra todo el catálogo disponible en el sistema."""
+    """[pirate listall] Muestra todo el catálogo disponible."""
     print("\n==========================================")
     print("         CATÁLOGO GENERAL DE PIRATE        ")
     print("==========================================")
-    
-    listar_catalogo_generico(LOCAL_CATALOG, "Juegos")
+    listar_catalogo_generico(LOCAL_CATALOG, tipo_filtro=None, titulo_categoria="Todo el Contenido")
 
 def update_catalogo():
     """[pirate update] Descarga la última versión del catálogo y del propio script."""
     asegurar_carpetas()
-    print("[*] Leyendo listas de juegos desde el repositorio...")
+    print("💀 Surcando los mares del repositorio...")
     
     cache_buster = f"?t={int(time.time())}"
 
@@ -97,15 +120,15 @@ def update_catalogo():
         req = urllib.request.urlopen(REPO_URL + cache_buster)
         data = req.read().decode('utf-8')
         
-        # Validar que sea un JSON válido antes de guardarlo localmente
+        # Validar que sea un JSON válido
         json.loads(data)
         
         with open(LOCAL_CATALOG, 'w', encoding='utf-8') as f:
             f.write(data)
-        print("[✓] Catálogo de juegos actualizado correctamente.")
+        print("💀 Se han actualizado los mapas del tesoro!")
 
         # 2. Auto-actualizar pirate.py
-        print("[*] Verificando actualizaciones del script...")
+        print("💀 Verificando que el barco esté en buen estado...")
         script_url = f"{SCRIPT_URL}{cache_buster}"
         req_script = urllib.request.urlopen(script_url)
         script_data = req_script.read().decode('utf-8')
@@ -115,7 +138,7 @@ def update_catalogo():
             with open(binary_path, 'w', encoding='utf-8') as f:
                 f.write(script_data)
             os.chmod(binary_path, 0o755)
-            print("[✓] Script pirate.py actualizado a la última versión de GitHub.")
+            print("💀 ¡El barco está en su ultima versión, como nuevo!")
 
     except json.JSONDecodeError as e:
         print(f"[X] El juegos.json en GitHub tiene un error de formato y no se guardó: {e}")
@@ -123,19 +146,20 @@ def update_catalogo():
         print(f"[X] Error al actualizar: {e}")
 
 def search_juegos(query=""):
-    """[pirate search] Busca un juego en el catálogo local."""
+    """[pirate search] Busca elementos en el catálogo local."""
     catalogo = cargar_catalogo_local()
     print(f"\n--- Resultados de búsqueda para '{query}' ---")
     encontrados = 0
     for key, info in catalogo.items():
         nombre = info.get('nombre', key)
         version = info.get('version', 'N/A')
+        tipo = info.get('tipo', 'juego').capitalize()
         if query.lower() in key.lower() or query.lower() in nombre.lower():
-            print(f" • {key} -> {nombre} (v{version})")
+            print(f" • [{tipo}] {key} -> {nombre} (v{version})")
             encontrados += 1
     
     if encontrados == 0:
-        print("No se encontraron juegos que coincidan.")
+        print("No se encontraron elementos que coincidan.")
     print()
 
 def install_juego(id_juego):
@@ -144,7 +168,7 @@ def install_juego(id_juego):
     catalogo = cargar_catalogo_local()
     
     if id_juego not in catalogo:
-        print(f"[!] El juego '{id_juego}' no existe en el catálogo.")
+        print(f"[!] El elemento '{id_juego}' no existe en el catálogo.")
         print("Probá buscando con: pirate search <nombre>")
         return
 
@@ -154,7 +178,6 @@ def install_juego(id_juego):
     fuentes = [info['url']] + info.get('mirrors', [])
     descarga_exitosa = False
     
-    # Determinar extensión del archivo según la URL
     url_principal = info['url']
     extension = ".tar.gz"
     if url_principal.endswith(".rar"):
@@ -174,15 +197,13 @@ def install_juego(id_juego):
         print("[!] Enlace caído o no disponible, intentando con mirror de respaldo...")
 
     if not descarga_exitosa:
-        print("[X] Error: No se pudo descargar el juego desde ninguna fuente.")
+        print("[X] Error: No se pudo descargar desde ninguna fuente.")
         return
 
     print(f"[*] Descomprimiendo archivos en {game_dir}...")
     os.makedirs(game_dir, exist_ok=True)
 
-    # Extraer según el formato de compresión
     if extension == ".rar":
-        # bsdtar viene por defecto en Arch Linux y soporta RAR/RAR5 perfectamente
         res_extraer = subprocess.run(["bsdtar", "-xf", archive_path, "-C", game_dir])
     elif extension == ".zip":
         res_extraer = subprocess.run(["unzip", "-q", archive_path, "-d", game_dir])
@@ -190,19 +211,17 @@ def install_juego(id_juego):
         res_extraer = subprocess.run(["tar", "-xzf", archive_path, "-C", game_dir])
 
     if res_extraer.returncode != 0:
-        print("[X] Ocurrió un error al descomprimir el archivo del juego.")
+        print("[X] Ocurrió un error al descomprimir el archivo.")
 
     if os.path.exists(archive_path):
         os.remove(archive_path)
 
-    # Asignar permisos al ejecutable
     ejecutable_relativo = info.get('ejecutable', '')
     if ejecutable_relativo:
         ejecutable_path = os.path.join(game_dir, ejecutable_relativo)
         if os.path.exists(ejecutable_path):
             os.chmod(ejecutable_path, 0o755)
 
-    # Registrar instalación localmente
     instalados = {}
     if os.path.exists(INSTALLED_GAMES_FILE):
         try:
@@ -215,12 +234,12 @@ def install_juego(id_juego):
     with open(INSTALLED_GAMES_FILE, 'w') as f:
         json.dump(instalados, f, indent=2)
 
-    print(f"\n[✓] ¡{info.get('nombre', id_juego)} listo para jugar!")
+    print(f"\n[✓] ¡{info.get('nombre', id_juego)} listo para disfrutar!")
 
 def upgrade_juegos():
-    """[pirate upgrade] Revisa actualizaciones de juegos instalados."""
+    """[pirate upgrade] Revisa actualizaciones del contenido instalado."""
     if not os.path.exists(INSTALLED_GAMES_FILE):
-        print("[*] No hay juegos instalados actualmente.")
+        print("[*] No hay contenido instalado actualmente.")
         return
 
     with open(INSTALLED_GAMES_FILE, 'r') as f:
@@ -238,10 +257,10 @@ def upgrade_juegos():
                 actualizaciones += 1
 
     if actualizaciones == 0:
-        print("[✓] Todos tus juegos están en la última versión disponible.")
+        print("[✓] Todo tu contenido está en la última versión disponible.")
 
 def request_juego(nombre_juego):
-    """[pirate request] Abre la página de GitHub para pedir un juego."""
+    """[pirate request] Abre la página de GitHub para pedir un contenido."""
     print(f"[*] Abriendo navegador para solicitar: '{nombre_juego}'...")
     query_string = urllib.parse.quote(f"Request: {nombre_juego}")
     url = f"{GITHUB_ISSUES_URL}{query_string}"
@@ -250,15 +269,19 @@ def request_juego(nombre_juego):
 # --- PANEL PRINCIPAL ---
 
 def main():
+    asegurar_carpetas()
+    
     if len(sys.argv) < 2:
         print("Uso de Pirate CLI:")
         print("  pirate update               -> Actualiza el catálogo y el script")
         print("  pirate search <nombre>      -> Busca elementos en el catálogo")
         print("  pirate listgames            -> Muestra solo los juegos")
+        print("  pirate listmovies           -> Muestra solo las películas")
+        print("  pirate listseries           -> Muestra solo las series")
         print("  pirate listall              -> Muestra todo el catálogo completo")
-        print("  pirate install <juego>      -> Descarga e instala un juego")
+        print("  pirate install <juego>      -> Descarga e instala un elemento")
         print("  pirate upgrade              -> Actualiza los juegos instalados")
-        print("  pirate request \"<juego>\"   -> Solicita que agreguen un juego")
+        print("  pirate request \"<juego>\"   -> Solicita que agreguen contenido")
         sys.exit(1)
 
     cmd = sys.argv[1].lower()
@@ -270,18 +293,22 @@ def main():
         search_juegos(query)
     elif cmd == "listgames":
         list_juegos()
+    elif cmd == "listmovies":
+        list_movies()
+    elif cmd == "listseries":
+        list_series()
     elif cmd == "listall":
         list_all()
     elif cmd == "install":
         if len(sys.argv) < 3:
-            print("[!] Especificá qué juego querés instalar. Ej: pirate install celeste")
+            print("[!] Especificá qué elemento querés instalar. Ej: pirate install celeste")
         else:
             install_juego(sys.argv[2])
     elif cmd == "upgrade":
         upgrade_juegos()
     elif cmd == "request":
         if len(sys.argv) < 3:
-            print('[!] Especificá el nombre del juego entre comillas. Ej: pirate request "Hotline Miami"')
+            print('[!] Especificá el nombre entre comillas. Ej: pirate request "Hotline Miami"')
         else:
             request_juego(sys.argv[2])
     else:
