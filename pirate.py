@@ -282,7 +282,7 @@ def main():
         print("  pirate install <juego>      -> Descarga e instala un elemento")
         print("  pirate upgrade              -> Actualiza los juegos instalados")
         print("  pirate request \"<juego>\"   -> Solicita que agreguen contenido")
-        print("\n Este repositorio consigue los juegos de distintas paginas como: SteamRIP, FitGirl Repacks. Para las roms paginas como Romsfun"
+        print("\n Este repositorio consigue los juegos de distintas paginas como: SteamRIP, FitGirl Repacks y ElEnemigos. Para las roms paginas como Romsfun"
         sys.exit(1)
 
     cmd = sys.argv[1].lower()
