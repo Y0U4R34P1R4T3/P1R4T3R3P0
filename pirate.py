@@ -36,6 +36,21 @@ def cargar_catalogo_local():
 
 # --- COMANDOS ---
 
+def list_all():
+    """[pirate listall] Muestra todo el catálogo disponible en el sistema."""
+    print("\n==========================================")
+    print("        CATÁLOGO GENERAL DE PIRATE        ")
+    print("==========================================")
+    
+    # Listar Juegos
+    listar_catalogo_generico(LOCAL_CATALOG, "Juegos")
+    
+    # Cuando agregues Películas y Series más adelante, solo sumás estas líneas:
+    # if os.path.exists(LOCAL_MOVIES_CATALOG):
+    #     listar_catalogo_generico(LOCAL_MOVIES_CATALOG, "Películas")
+    # if os.path.exists(LOCAL_SERIES_CATALOG):
+    #     listar_catalogo_generico(LOCAL_SERIES_CATALOG, "Series")
+
 def listar_catalogo_generico(archivo_json, tipo_contenido):
     """Función genérica para listar cualquier categoría (Juegos, Películas, Series)."""
     if not os.path.exists(archivo_json):
@@ -198,7 +213,8 @@ def main():
         print("Uso de Pirate CLI:")
         print("  pirate update               -> Actualiza el catálogo")
         print("  pirate search <nombre>      -> Busca elementos en el catálogo")
-        print("  pirate listgames            -> Muestra todos los juegos disponibles")  # <--- Agregado
+        print("  pirate listgames            -> Muestra solo los juegos")
+        print("  pirate listall              -> Muestra todo el catálogo completo")  # <--- Agregado
         print("  pirate install <juego>     -> Descarga e instala un juego")
         print("  pirate upgrade              -> Actualiza los juegos instalados")
         print("  pirate request \"<juego>\"   -> Solicita que agreguen un juego")
@@ -211,8 +227,10 @@ def main():
     elif cmd == "search":
         query = sys.argv[2] if len(sys.argv) >= 3 else ""
         search_juegos(query)
-    elif cmd == "listgames":                                                      # <--- Agregado
+    elif cmd == "listgames":
         list_juegos()
+    elif cmd == "listall":                                                        # <--- Agregado
+        list_all()
     elif cmd == "install":
         if len(sys.argv) < 3:
             print("[!] Especificá qué juego querés instalar. Ej: pirate install celeste")
