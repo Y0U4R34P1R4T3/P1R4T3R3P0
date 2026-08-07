@@ -3,6 +3,7 @@ import sys
 import os
 import json
 import urllib.request
+import urllib.parse
 import subprocess
 import webbrowser
 
@@ -142,7 +143,7 @@ def upgrade_juegos():
 def request_juego(nombre_juego):
     """[pirate request] Abre la página de GitHub para pedir un juego."""
     print(f"[*] Abriendo navegador para solicitar: '{nombre_juego}'...")
-    query_string = urllib.parse.quote(nombre_juego)
+    query_string = urllib.parse.quote(f"Request: {nombre_juego}")
     url = f"{GITHUB_ISSUES_URL}{query_string}"
     webbrowser.open(url)
 
