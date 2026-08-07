@@ -8,6 +8,7 @@ import subprocess
 import webbrowser
 
 # Configura la URL directa a tu JSON en GitHub Pages
+SCRIPT_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/pirate.py"
 REPO_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/juegos.json"
 GITHUB_ISSUES_URL = f"https://github.com/Y0U4R34P1R4T3/P1R4T3R3P0/issues/new?title="
 
@@ -36,18 +37,32 @@ def cargar_catalogo_local():
 # --- COMANDOS ---
 
 def update_catalogo():
-    """[pirate update] Descarga la última versión del catálogo desde GitHub Pages."""
+    """[pirate update] Descarga la última versión del catálogo y del script."""
     asegurar_carpetas()
-    print("[*] Leyendo listas de juegos desde el repositorio...")
+    print("[*] Actualizando catálogo de juegos...")
     try:
         req = urllib.request.urlopen(REPO_URL)
         data = req.read().decode('utf-8')
-        # Guardar en disco
         with open(LOCAL_CATALOG, 'w', encoding='utf-8') as f:
             f.write(data)
-        print("[✓] Lista de juegos actualizada correctamente.")
+        print("[✓] Catálogo de juegos actualizado correctamente.")
     except Exception as e:
-        print(f"[X] Error al conectar con el repositorio: {e}")
+        print(f"[X] Error al actualizar el catálogo: {e}")
+
+    # Auto-actualización del script pirate.py
+    print("[*] Verificando actualizaciones de la herramienta...")
+    try:
+        req_script = urllib.request.urlopen(SCRIPT_URL)
+        script_data = req_script.read().decode('utf-8')
+        
+        binary_path = os.path.expanduser("~/.local/bin/pirate")
+        if os.path.exists(binary_path):
+            with open(binary_path, 'w', encoding='utf-8') as f:
+                f.write(script_data)
+            os.chmod(binary_path, 0o755)
+            print("[✓] ¡Herramienta pirate actualizada a la última versión!")
+    except Exception as e:
+        print(f"[!] No se pudo actualizar el script automáticamente: {e}")
 
 def search_juegos(query=""):
     """[pirate search] Busca un juego en el catálogo local."""
