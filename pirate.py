@@ -36,6 +36,35 @@ def cargar_catalogo_local():
 
 # --- COMANDOS ---
 
+def listar_catalogo_generico(archivo_json, tipo_contenido):
+    """Función genérica para listar cualquier categoría (Juegos, Películas, Series)."""
+    if not os.path.exists(archivo_json):
+        print(f"[!] No se encontró el catálogo de {tipo_contenido}. Ejecutá 'pirate update' primero.")
+        return
+
+    try:
+        with open(archivo_json, 'r', encoding='utf-8') as f:
+            catalogo = json.load(f)
+    except Exception:
+        print(f"[X] Error al leer el catálogo de {tipo_contenido}.")
+        return
+
+    print(f"\n=== CATÁLOGO DE {tipo_contenido.upper()} DISPONIBLES ===")
+    if not catalogo:
+        print(" No hay elementos en el catálogo.")
+        return
+
+    for key, info in catalogo.items():
+        nombre = info.get('nombre', key)
+        version = info.get('version', '')
+        version_str = f" (v{version})" if version else ""
+        print(f" • [{key}] -> {nombre}{version_str}")
+    print()
+
+def list_juegos():
+    """[pirate listgames] Muestra el catálogo completo de juegos."""
+    listar_catalogo_generico(LOCAL_CATALOG, "Juegos")
+
 def update_catalogo():
     """[pirate update] Descarga la última versión del catálogo y del script."""
     asegurar_carpetas()
@@ -167,8 +196,9 @@ def request_juego(nombre_juego):
 def main():
     if len(sys.argv) < 2:
         print("Uso de Pirate CLI:")
-        print("  pirate update               -> Actualiza el catálogo de juegos")
-        print("  pirate search <nombre>      -> Busca juegos en el repositorio")
+        print("  pirate update               -> Actualiza el catálogo")
+        print("  pirate search <nombre>      -> Busca elementos en el catálogo")
+        print("  pirate listgames            -> Muestra todos los juegos disponibles")  # <--- Agregado
         print("  pirate install <juego>     -> Descarga e instala un juego")
         print("  pirate upgrade              -> Actualiza los juegos instalados")
         print("  pirate request \"<juego>\"   -> Solicita que agreguen un juego")
@@ -181,6 +211,8 @@ def main():
     elif cmd == "search":
         query = sys.argv[2] if len(sys.argv) >= 3 else ""
         search_juegos(query)
+    elif cmd == "listgames":                                                      # <--- Agregado
+        list_juegos()
     elif cmd == "install":
         if len(sys.argv) < 3:
             print("[!] Especificá qué juego querés instalar. Ej: pirate install celeste")
