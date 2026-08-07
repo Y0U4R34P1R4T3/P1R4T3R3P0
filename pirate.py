@@ -8,19 +8,26 @@ import urllib.parse
 import subprocess
 import webbrowser
 
-# Configura la URL directa a tu JSON en GitHub Pages
+# Configura las URLs del repositorio
 SCRIPT_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/pirate.py"
 REPO_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/juegos.json"
-GITHUB_ISSUES_URL = f"https://github.com/Y0U4R34P1R4T3/P1R4T3R3P0/issues/new?title="
+GITHUB_ISSUES_URL = "https://github.com/Y0U4R34P1R4T3/P1R4T3R3P0/issues/new?title="
 
-# Carpetas de datos locales
+# Carpetas de contenido visibles en tu carpeta personal (~/PIRATE)
+PIRATE_DIR = os.path.expanduser("~/PIRATE")
+GAMES_DIR = os.path.join(PIRATE_DIR, "Games")
+MOVIES_DIR = os.path.join(PIRATE_DIR, "Movies")
+
+# Archivos de datos locales y configuración
 DATA_DIR = os.path.expanduser("~/.local/share/pirate")
-INSTALL_DIR = os.path.join(DATA_DIR, "games")
 LOCAL_CATALOG = os.path.join(DATA_DIR, "juegos.json")
 INSTALLED_GAMES_FILE = os.path.join(DATA_DIR, "installed.json")
 
 def asegurar_carpetas():
-    os.makedirs(INSTALL_DIR, exist_ok=True)
+    """Crea la estructura de carpetas si no existen."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    os.makedirs(GAMES_DIR, exist_ok=True)
+    os.makedirs(MOVIES_DIR, exist_ok=True)
 
 def cargar_catalogo_local():
     """Carga el JSON descargado localmente."""
@@ -36,21 +43,6 @@ def cargar_catalogo_local():
         sys.exit(1)
 
 # --- COMANDOS ---
-
-def list_all():
-    """[pirate listall] Muestra todo el catálogo disponible en el sistema."""
-    print("\n==========================================")
-    print("        CATÁLOGO GENERAL DE PIRATE        ")
-    print("==========================================")
-    
-    # Listar Juegos
-    listar_catalogo_generico(LOCAL_CATALOG, "Juegos")
-    
-    # Cuando agregues Películas y Series más adelante, solo sumás estas líneas:
-    # if os.path.exists(LOCAL_MOVIES_CATALOG):
-    #     listar_catalogo_generico(LOCAL_MOVIES_CATALOG, "Películas")
-    # if os.path.exists(LOCAL_SERIES_CATALOG):
-    #     listar_catalogo_generico(LOCAL_SERIES_CATALOG, "Series")
 
 def listar_catalogo_generico(archivo_json, tipo_contenido):
     """Función genérica para listar cualquier categoría (Juegos, Películas, Series)."""
@@ -81,6 +73,19 @@ def list_juegos():
     """[pirate listgames] Muestra el catálogo completo de juegos."""
     listar_catalogo_generico(LOCAL_CATALOG, "Juegos")
 
+def list_all():
+    """[pirate listall] Muestra todo el catálogo disponible en el sistema."""
+    print("\n==========================================")
+    print("        CATÁLOGO GENERAL DE PIRATE        ")
+    print("==========================================")
+    
+    # Listar Juegos
+    listar_catalogo_generico(LOCAL_CATALOG, "Juegos")
+    
+    # Para futuras categorías (Películas y Series)
+    # if os.path.exists(LOCAL_MOVIES_CATALOG):
+    #     listar_catalogo_generico(LOCAL_MOVIES_CATALOG, "Películas")
+
 def update_catalogo():
     """[pirate update] Descarga la última versión del catálogo y del propio script."""
     asegurar_carpetas()
@@ -99,7 +104,7 @@ def update_catalogo():
 
         # 2. Auto-actualizar pirate.py
         print("[*] Verificando actualizaciones del script...")
-        script_url = f"https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/pirate.py{cache_buster}"
+        script_url = f"{SCRIPT_URL}{cache_buster}"
         req_script = urllib.request.urlopen(script_url)
         script_data = req_script.read().decode('utf-8')
 
@@ -128,6 +133,7 @@ def search_juegos(query=""):
 
 def install_juego(id_juego):
     """[pirate install] Descarga e instala un juego."""
+    asegurar_carpetas()
     catalogo = cargar_catalogo_local()
     
     if id_juego not in catalogo:
@@ -138,8 +144,8 @@ def install_juego(id_juego):
     info = catalogo[id_juego]
     print(f"[*] Preparando la instalación de: {info['nombre']} (v{info['version']})")
 
-    tar_path = os.path.join(INSTALL_DIR, f"{id_juego}.tar.gz")
-    game_dir = os.path.join(INSTALL_DIR, id_juego)
+    tar_path = os.path.join(GAMES_DIR, f"{id_juego}.tar.gz")
+    game_dir = os.path.join(GAMES_DIR, id_juego)
 
     # Lista de fuentes (principal + mirrors)
     fuentes = [info['url']] + info.get('mirrors', [])
@@ -157,7 +163,7 @@ def install_juego(id_juego):
         print("[X] Error: No se pudo descargar el juego desde ninguna fuente.")
         return
 
-    print(f"[*] Descomprimiendo archivos...")
+    print(f"[*] Descomprimiendo archivos en {game_dir}...")
     os.makedirs(game_dir, exist_ok=True)
     subprocess.run(["tar", "-xzf", tar_path, "-C", game_dir])
 
@@ -215,10 +221,10 @@ def request_juego(nombre_juego):
 def main():
     if len(sys.argv) < 2:
         print("Uso de Pirate CLI:")
-        print("  pirate update               -> Actualiza el catálogo")
+        print("  pirate update               -> Actualiza el catálogo y el script")
         print("  pirate search <nombre>      -> Busca elementos en el catálogo")
         print("  pirate listgames            -> Muestra solo los juegos")
-        print("  pirate listall              -> Muestra todo el catálogo completo")  # <--- Agregado
+        print("  pirate listall              -> Muestra todo el catálogo completo")
         print("  pirate install <juego>     -> Descarga e instala un juego")
         print("  pirate upgrade              -> Actualiza los juegos instalados")
         print("  pirate request \"<juego>\"   -> Solicita que agreguen un juego")
@@ -233,7 +239,7 @@ def main():
         search_juegos(query)
     elif cmd == "listgames":
         list_juegos()
-    elif cmd == "listall":                                                        # <--- Agregado
+    elif cmd == "listall":
         list_all()
     elif cmd == "install":
         if len(sys.argv) < 3:
