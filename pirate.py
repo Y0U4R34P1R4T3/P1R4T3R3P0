@@ -31,7 +31,7 @@ def asegurar_carpetas():
     os.makedirs(MOVIES_DIR, exist_ok=True)
 
     if not os.path.exists(WELCOME_FLAG_FILE):
-        print("💀 Bienvenido al barco, marinero! He creado este repositorio para que puedas descargar juegos, películas y series! Puedes utilizar el comando 'pirate' para ver el listado de comandos! Suerte recorriendo estos mares, marinero...\n")
+        print("☠ Bienvenido al barco, marinero! He creado este repositorio para que puedas descargar juegos, películas y series! Puedes utilizar el comando 'pirate' para ver el listado de comandos! Suerte recorriendo estos mares, marinero...\n")
         with open(WELCOME_FLAG_FILE, 'w', encoding='utf-8') as f:
             f.write("1")
 
@@ -111,7 +111,7 @@ def list_all():
 def update_catalogo():
     """[pirate update] Descarga la última versión del catálogo y del propio script."""
     asegurar_carpetas()
-    print("💀 Surcando los mares del repositorio...")
+    print("☠ Surcando los mares del repositorio...")
     
     cache_buster = f"?t={int(time.time())}"
 
@@ -125,10 +125,10 @@ def update_catalogo():
         
         with open(LOCAL_CATALOG, 'w', encoding='utf-8') as f:
             f.write(data)
-        print("💀 Se han actualizado los mapas del tesoro!")
+        print("☠ Se han actualizado los mapas del tesoro!")
 
         # 2. Auto-actualizar pirate.py
-        print("💀 Verificando que el barco esté en buen estado...")
+        print("☠ Verificando que el barco esté en buen estado...")
         script_url = f"{SCRIPT_URL}{cache_buster}"
         req_script = urllib.request.urlopen(script_url)
         script_data = req_script.read().decode('utf-8')
@@ -138,7 +138,7 @@ def update_catalogo():
             with open(binary_path, 'w', encoding='utf-8') as f:
                 f.write(script_data)
             os.chmod(binary_path, 0o755)
-            print("💀 ¡El barco está en su ultima versión, como nuevo!")
+            print("☠ ¡El barco está en su última versión, como nuevo!")
 
     except json.JSONDecodeError as e:
         print(f"[X] El juegos.json en GitHub tiene un error de formato y no se guardó: {e}")
