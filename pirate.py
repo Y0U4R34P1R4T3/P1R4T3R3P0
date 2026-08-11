@@ -321,14 +321,14 @@ def install_juego(id_juego):
         os.makedirs(game_dir, exist_ok=True)
         exito = manejar_torrent_cli(url_elegida, game_dir, nombre_item)
         if not exito:
-            notificar_link_caido(id_juego, nombre_item, url_elegida, etiqueta_elegida)
+            notificar_error_instalacion(id_juego, nombre_item, url_elegida, etiqueta_elegida)
         return
 
     url_real = resolver_url_descarga(url_elegida)
 
     if not verificar_enlace_activo(url_real):
         print(f"\n[X] El enlace seleccionado no responde o está caído.")
-        notificar_link_caido(id_juego, nombre_item, url_elegida, etiqueta_elegida)
+        notificar_error_instalacion(id_juego, nombre_item, url_elegida, etiqueta_elegida)
         print("Probá ejecutando el comando de nuevo y seleccionando otro mirror.")
         return
 
@@ -345,7 +345,7 @@ def install_juego(id_juego):
 
     if not descarga_exitosa or not os.path.exists(archive_path) or os.path.getsize(archive_path) < 1024:
         print(f"\n[X] Falló la descarga desde la opción seleccionada.")
-        notificar_link_caido(id_juego, nombre_item, url_elegida, etiqueta_elegida)
+        notificar_error_instalacion(id_juego, nombre_item, url_elegida, etiqueta_elegida)
         if os.path.exists(archive_path):
             os.remove(archive_path)
         return
