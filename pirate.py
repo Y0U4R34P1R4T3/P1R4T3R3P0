@@ -475,16 +475,42 @@ def install_juego(id_juego):
         )
         return
 
+    # Búsqueda inteligente del ejecutable
     ejecutable_relativo = info.get('ejecutable', '')
+    ejecutable_hallado = None
+
     if ejecutable_relativo:
-        ejecutable_path = os.path.join(game_dir, ejecutable_relativo)
-        if os.path.exists(ejecutable_path):
-            os.chmod(ejecutable_path, 0o755)
+        # 1. Probar la ruta directa declarada en el catálogo
+        ruta_directa = os.path.join(game_dir, ejecutable_relativo)
+        if os.path.exists(ruta_directa):
+            ejecutable_hallado = ruta_directa
         else:
-            notificar_error_instalacion(
-                id_juego, nombre_item, url_elegida, etiqueta_elegida,
-                motivo_error=f"Falta ejecutable: No se halló '{ejecutable_relativo}' tras descompresión."
-            )
+            # 2. Buscar por nombre del archivo en subcarpetas del directorio del juego
+            nombre_exe = os.path.basename(ejecutable_relativo)
+            for root, dirs, files in os.walk(game_dir):
+                if nombre_exe in files:
+                    ejecutable_hallado = os.path.join(root, nombre_exe)
+                    break
+
+    # 3. Si no se declaró ejecutable o no se encontró con el nombre exacto, buscar cualquier ejecutable o binario
+    if not ejecutable_hallado:
+        for root, dirs, files in os.walk(game_dir):
+            for file in files:
+                if file.endswith(('.exe', '.x86_64', '.AppImage')) or (os.access(os.path.join(root, file), os.X_OK) and not file.endswith(('.sh', '.txt', '.json'))):
+                    ejecutable_hallado = os.path.join(root, file)
+                    break
+            if ejecutable_hallado:
+                break
+
+    if ejecutable_hallado:
+        os.chmod(ejecutable_hallado, 0o755)
+        print(f"[*] Ejecutable detectado y configurado: {os.path.relpath(ejecutable_hallado, game_dir)}")
+    else:
+        print(f"[!] No se encontró el ejecutable '{ejecutable_relativo}' en {game_dir}.")
+        notificar_error_instalacion(
+            id_juego, nombre_item, url_elegida, etiqueta_elegida,
+            motivo_error=f"Falta ejecutable: No se halló '{ejecutable_relativo}' ni ningún binario tras la extracción."
+        )
 
     instalados = {}
     if os.path.exists(INSTALLED_GAMES_FILE):
