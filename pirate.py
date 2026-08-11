@@ -15,6 +15,9 @@ SCRIPT_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/pi
 REPO_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/juegos.json"
 GITHUB_ISSUES_URL = "https://github.com/Y0U4R34P1R4T3/P1R4T3R3P0/issues/new?title="
 
+# Si tus descargas usan una contraseña global por defecto, podés ponerla acá (ej: "1234"):
+PASSWORD_COMPRIMIDO = "elenemigos.com"
+
 # Canal de ntfy.sh para recibir notificaciones en tu celular
 NTFY_CHANNEL = "LinuxRepoPirate"
 
@@ -44,6 +47,78 @@ def instalar_aria2_si_falta():
         except Exception as e:
             print(f"[!] No se pudo instalar 'aria2' automáticamente: {e}")
             print("[!] Se usará 'wget' como motor de respaldo.")
+
+def instalar_descompresores_si_falta():
+    """Instala automáticamente unrar y p7zip si no se encuentran en el sistema."""
+    falta_unrar = not shutil.which("unrar")
+    falta_7z = not (shutil.which("7z") or shutil.which("7za"))
+
+    if falta_unrar or falta_7z:
+        print("[*] Instalando herramientas de descompresión (unrar / p7zip) para soporte RAR5/Encriptación...")
+        try:
+            if shutil.which("apt"):
+                subprocess.run(["sudo", "apt", "update", "-y"], check=False)
+                subprocess.run(["sudo", "apt", "install", "-y", "unrar", "p7zip-full"], check=False)
+            elif shutil.which("pacman"):
+                subprocess.run(["sudo", "pacman", "-S", "--noconfirm", "unrar", "p7zip"], check=False)
+            elif shutil.which("dnf"):
+                subprocess.run(["sudo", "dnf", "install", "-y", "unrar", "p7zip", "p7zip-plugins"], check=False)
+        except Exception as e:
+            print(f"[!] No se pudieron instalar los descompresores automáticamente: {e}")
+
+def descomprimir_archivo(archive_path, game_dir, extension):
+    """Intenta descomprimir usando unrar, 7z o bsdtar soportando encriptación y contraseñas."""
+    instalar_descompresores_si_falta()
+
+    if extension == ".rar":
+        # Intento 1: unrar (Mejor soporte para contraseñas y RAR5)
+        if shutil.which("unrar"):
+            cmd = ["unrar", "x", "-o+"]
+            if PASSWORD_COMPRIMIDO:
+                cmd.append(f"-p{PASSWORD_COMPRIMIDO}")
+            else:
+                cmd.append("-p-")
+            cmd.extend([archive_path, game_dir + "/"])
+            res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if res.returncode == 0:
+                return True
+
+        # Intento 2: 7z / 7za
+        bin_7z = shutil.which("7z") or shutil.which("7za")
+        if bin_7z:
+            cmd = [bin_7z, "x", f"-o{game_dir}", "-y"]
+            if PASSWORD_COMPRIMIDO:
+                cmd.append(f"-p{PASSWORD_COMPRIMIDO}")
+            cmd.append(archive_path)
+            res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if res.returncode == 0:
+                return True
+
+        # Intento 3: bsdtar como respaldo
+        res = subprocess.run(["bsdtar", "-xf", archive_path, "-C", game_dir])
+        return res.returncode == 0
+
+    elif extension == ".zip":
+        bin_7z = shutil.which("7z") or shutil.which("7za")
+        if bin_7z:
+            cmd = [bin_7z, "x", f"-o{game_dir}", "-y"]
+            if PASSWORD_COMPRIMIDO:
+                cmd.append(f"-p{PASSWORD_COMPRIMIDO}")
+            cmd.append(archive_path)
+            res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if res.returncode == 0:
+                return True
+
+        cmd = ["unzip", "-q", "-o"]
+        if PASSWORD_COMPRIMIDO:
+            cmd.extend(["-P", PASSWORD_COMPRIMIDO])
+        cmd.extend([archive_path, "-d", game_dir])
+        res = subprocess.run(cmd)
+        return res.returncode == 0
+
+    else:
+        res = subprocess.run(["tar", "-xzf", archive_path, "-C", game_dir])
+        return res.returncode == 0
 
 def asegurar_carpetas():
     """Crea la estructura de carpetas y muestra el mensaje de bienvenida en la primera instalación."""
@@ -387,22 +462,18 @@ def install_juego(id_juego):
     print(f"[*] Descomprimiendo archivos en {game_dir}...")
     os.makedirs(game_dir, exist_ok=True)
 
-    if extension == ".rar":
-        res_extraer = subprocess.run(["bsdtar", "-xf", archive_path, "-C", game_dir])
-    elif extension == ".zip":
-        res_extraer = subprocess.run(["unzip", "-q", archive_path, "-d", game_dir])
-    else:
-        res_extraer = subprocess.run(["tar", "-xzf", archive_path, "-C", game_dir])
-
-    if res_extraer.returncode != 0:
-        print("[X] Ocurrió un error al descomprimir el archivo.")
-        notificar_error_instalacion(
-            id_juego, nombre_item, url_elegida, etiqueta_elegida,
-            motivo_error=f"Error en extracción ({extension}) - Código de retorno: {res_extraer.returncode}."
-        )
+    descompresion_ok = descomprimir_archivo(archive_path, game_dir, extension)
 
     if os.path.exists(archive_path):
         os.remove(archive_path)
+
+    if not descompresion_ok:
+        print("\n[X] Ocurrió un error al descomprimir el archivo (Encriptación/Contraseña o formato RAR5 no soportado).")
+        notificar_error_instalacion(
+            id_juego, nombre_item, url_elegida, etiqueta_elegida,
+            motivo_error=f"Error en extracción ({extension}) - Encriptación / Contraseña incorrecta o fallo en descompresor."
+        )
+        return
 
     ejecutable_relativo = info.get('ejecutable', '')
     if ejecutable_relativo:
