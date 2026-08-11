@@ -1,28 +1,34 @@
-#!/bin/bash
+#!/bin/sh
+set -e
 
-echo "[*] Instalando P1R4T3 CLI..."
+echo "☠ Instalando Pirate CLI..."
 
-# Detectar e instalar dependencias (wget y python)
-if command -v pacman &> /dev/null; then
-    sudo pacman -S --needed wget python -y
-elif command -v apt &> /dev/null; then
-    sudo apt update && sudo apt install -y wget python3
+# Crear carpeta de binarios locales
+mkdir -p "$HOME/.local/bin"
+
+# Descargar pirate.py
+if command -v curl >/dev/null 2>&1; then
+    curl -sSL "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/pirate.py" -o "$HOME/.local/bin/pirate"
+elif command -v wget >/dev/null 2>&1; then
+    wget -qO "$HOME/.local/bin/pirate" "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/pirate.py"
+else
+    echo "[X] Error: Se necesita curl o wget para instalar Pirate CLI."
+    exit 1
 fi
 
-# Crear carpetas locales
-mkdir -p ~/.local/bin
-mkdir -p ~/.local/share/pirate/games
+# Permisos de ejecución
+chmod +x "$HOME/.local/bin/pirate"
 
-# Descargar pirate.py desde tu GitHub a la carpeta de binarios del usuario
-wget -q -O ~/.local/bin/pirate https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/pirate.py
-chmod +x ~/.local/bin/pirate
-
-# Agregar ~/.local/bin al PATH si no esta presente
-if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+# Agregar a PATH en .bashrc si no está agregado
+if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+    if [ -f "$HOME/.zshrc" ]; then
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
+    fi
 fi
 
-echo "[V] ¡Instalación completada!"
-echo "[*] Reiniciá la terminal o ejecutá: source ~/.bashrc"
-echo "[*] Luego probá con: pirate update"
+# Exportar para la sesión actual y ejecutar primera actualización
+export PATH="$HOME/.local/bin:$PATH"
+"$HOME/.local/bin/pirate" update
+
+echo "☠ ¡Pirate CLI se instaló correctamente! Reiniciá la terminal o ejecutá 'source ~/.bashrc' si el comando 'pirate' no responde."
