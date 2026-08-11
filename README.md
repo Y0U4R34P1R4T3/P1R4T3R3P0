@@ -45,15 +45,15 @@ Una vez instalado, ejecutá el comando `pirate` ⚙️ directamente en tu termin
 ### ⚙️ Características Principales
 
 * 🚀 **Descargas Aceleradas:** Uso automático de `aria2c` (con multihilos) o `wget` como motor de respaldo.
-* 📦 **Soporte Multi-fuente:** Descargas directas, MediaFire, Buzzheavier, GoFile y Torrents / Magnets.
-* 🔔 **Sistema de Alerta Automatizado:** Notificaciones instantáneas push en caso de detectar enlaces o descargas caídas.
+* 📦 **Soporte Multi-fuente:** Descargas directas, MediaFire, Buzzheavier, GoFile y Torrents / Magnets y mucho más, asegurando que siempre hayan enlaces disponibles.
+* 🔔 **Sistema de Alerta Automatizado:** Notificaciones instantáneas push en caso de detectar enlaces o descargas caídas para que siempre hayan enlaces actualizados y funcionales.
 * 📁 **Estructura Organizada:** Todo se almacena automáticamente en tu carpeta personal (`~/PIRATE/Games` y `~/PIRATE/Movies`).
 
 ---
 
 ### 💬 Soporte, Sugerencias e Issues
 
-¿Encontraste un enlace caído, un error en la terminal 💻 o querés solicitar que agreguemos un juego nuevo 🎮? 
+¿Encontraste un enlace caído, un error en la terminal 💻 o querés solicitar que agreguemos un juego, pelicula, serie que no este en el repositorio? 
 Podés abrir un reporte en la sección de **[Issues](../../issues)** 🛠️.
 
 <div align="center">
