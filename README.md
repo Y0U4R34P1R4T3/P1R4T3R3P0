@@ -1,62 +1,62 @@
-# P1R4T3R3P0
+# :skull: :crossed_swords: :anchor: P1R4T3R3P0 :anchor: :crossed_swords: :skull:
 
-> **El gestor CLI de descargas para Linux — Juegos 🎮, Películas 🎬 y Series 📺**
+> **El gestor CLI de descargas para Linux — Juegos :video_game:, Películas :clapper: y Series :tv:**
 
-¡Bienvenido a bordo, marinero! **P1R4T3R3P0** es un gestor interactivo para la terminal de Linux diseñado para buscar, descargar, descomprimir e instalar contenido multimedia de forma totalmente automática 🚀.
+¡Bienvenido a bordo, marinero! :ocean: **P1R4T3R3P0** es un gestor interactivo para la terminal de Linux diseñado para buscar :mag:, descargar :inbox_tray:, descomprimir :package: e instalar :rocket: contenido multimedia de forma totalmente automática.
 
 ---
 
-### ⚡ 📥 Instalación Rápida
+### :zap: :inbox_tray: Instalación Rápida
 
-Ejecutá cualquiera de estos dos comandos en tu terminal para instalar el script:
+Ejecutá cualquiera de estos dos comandos en tu terminal para abordar el barco :ship::
 
 <div align="left">
 <pre style="background-color: #0d1117; color: #2ea043; padding: 18px; border-radius: 12px; border: 1px solid #30363d; font-family: 'Courier New', Courier, monospace;">
-<span style="color: #8b949e;"># 🚀 Opción 1: Con cURL (Recomendado)</span>
+<span style="color: #8b949e;"># :rocket: Opción 1: Con cURL (Recomendado)</span>
 <span style="color: #00ff66;">curl -sSL https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/install.sh | sh</span>
 
-<span style="color: #8b949e;"># 📦 Opción 2: Con Wget</span>
+<span style="color: #8b949e;"># :package: Opción 2: Con Wget</span>
 <span style="color: #00ff66;">wget -qO- https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/install.sh | sh</span>
 </pre>
 </div>
 
-> ⚠️ **¡Atención!** El repositorio cambia constantemente. Acordate de ejecutar siempre `pirate update` 🔄 antes de descargar algo para refrescar los catálogos y asegurar que usás las últimas versiones disponibles.
+> :warning: **¡Atención Navegante!** :map: El repositorio cambia constantemente. Acordate de ejecutar siempre `pirate update` :counterclockwise: antes de descargar algo para refrescar los mapas y asegurar que usás las últimas versiones disponibles.
 
 ---
 
-### 💻 Uso y Comandos
+### :tools: :computer: :scroll: Uso y Comandos
 
-Una vez instalado, ejecutá el comando `pirate` ⚙️ directamente en tu terminal:
+Una vez instalado, ejecutá el comando `pirate` :gear: directamente en tu terminal:
 
-| Comando | Estado | Descripción |
+| Comando | Icono | Descripción |
 | :--- | :---: | :--- |
-| `pirate update` | 🔄 | Actualiza el catálogo local y el script a la última versión |
-| `pirate search <nombre>` | 🔍 | Busca juegos, películas o series por palabra clave |
-| `pirate listall` | 📜 | Muestra el catálogo completo sin filtros |
-| `pirate listgames` | 🎮 | Muestra únicamente el catálogo de juegos |
-| `pirate listmovies` | 🎬 | Muestra únicamente la lista de películas |
-| `pirate listseries` | 📺 | Muestra únicamente la lista de series |
-| `pirate install <id>` | 📥 | Descarga, descomprime e instala un elemento |
-| `pirate upgrade` | 🚀 | Actualiza tus juegos instalados a la versión más reciente |
-| `pirate request "<nombre>"` | 📝 | Abre una solicitud en GitHub para pedir contenido |
+| `pirate update` | :counterclockwise: | Actualiza el catálogo local y el script a la última versión :rocket: |
+| `pirate search <nombre>` | :mag: | Busca juegos, películas o series por palabra clave :key: |
+| `pirate listall` | :scroll: | Muestra el catálogo completo sin filtros :crown: |
+| `pirate listgames` | :video_game: | Muestra únicamente el catálogo de juegos :dart: |
+| `pirate listmovies` | :clapper: | Muestra únicamente la lista de películas :movie_camera: |
+| `pirate listseries` | :tv: | Muestra únicamente la lista de series :film_strip: |
+| `pirate install <id>` | :inbox_tray: | Descarga, descomprime e instala un elemento :zap: |
+| `pirate upgrade` | :rocket: | Actualiza tus juegos instalados a la versión más reciente :gem: |
+| `pirate request "<nombre>"` | :pencil: | Abre una solicitud en GitHub para pedir contenido :envelope: |
 
 ---
 
-### ⚙️ Características Principales
+### :sparkles: :crossed_swords: :fire: Características Principales
 
-* 🚀 **Descargas Aceleradas:** Uso automático de `aria2c` (con multihilos) o `wget` como motor de respaldo.
-* 📦 **Soporte Multi-fuente:** Descargas directas, MediaFire, Buzzheavier, GoFile y Torrents / Magnets y mucho más, asegurando que siempre hayan enlaces disponibles.
-* 🔔 **Sistema de Alerta Automatizado:** Notificaciones instantáneas push en caso de detectar enlaces o descargas caídas para que siempre hayan enlaces actualizados y funcionales.
-* 📁 **Estructura Organizada:** Todo se almacena automáticamente en tu carpeta personal (`~/PIRATE/Games` y `~/PIRATE/Movies`).
+* :rocket: **Descargas Aceleradas:** Uso automático de `aria2c` :zap: (con multihilos) o `wget` :package: como motor de respaldo.
+* :magnet: **Soporte Multi-fuente:** Descargas directas, MediaFire :package:, Buzzheavier :zap:, GoFile :open_file_folder: y Torrents / Magnets :magnet:.
+* :bell: **Sistema de Alerta Automatizado:** Notificaciones instantáneas push :iphone: en caso de detectar enlaces o descargas caídas.
+* :file_folder: **Estructura Organizada:** Todo se almacena automáticamente en tu carpeta personal :house: (`~/PIRATE/Games` :video_game: y `~/PIRATE/Movies` :clapper:).
 
 ---
 
-### 💬 Soporte, Sugerencias e Issues
+### :speech_balloon: :bug: Soporte, Sugerencias e Issues
 
-¿Encontraste un enlace caído, un error en la terminal 💻 o querés solicitar que agreguemos un juego, pelicula, serie que no este en el repositorio? 
-Podés abrir un reporte en la sección de **[Issues](../../issues)** 🛠️.
+¿Encontraste un enlace caído :x:, un error en la terminal :computer: o querés solicitar que agreguemos un juego nuevo :video_game:? 
+Podés abrir un reporte en la sección de **[Issues](../../issues)** :tools:.
 
 <div align="center">
   <br>
-  <b>¡Gracias por usar Pirate CLI y surcar los mares con nosotros! ⚓</b>
+  <b>:skull: ¡Gracias por usar Pirate CLI y surcar los mares con nosotros! :anchor: :ocean: :ship:</b>
 </div>
