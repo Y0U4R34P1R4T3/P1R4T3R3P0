@@ -73,18 +73,19 @@ def cargar_catalogo_local():
         print(f"[X] Error insospechado al leer el catálogo: {e}")
         sys.exit(1)
 
-def notificar_link_caido(id_item, nombre_item, url_caida, tipo_enlace="Principal"):
-    """Envía una notificación push detallada al celular del owner vía ntfy.sh."""
+def notificar_error_instalacion(id_item, nombre_item, url_caida, tipo_enlace="Principal", motivo_error="Error desconocido"):
+    """Envía una notificación push detallada al celular del owner vía ntfy.sh con la razón del error."""
     if not NTFY_CHANNEL:
         return
 
     try:
-        titulo = f"⚠️ Link Caído: {nombre_item}"
+        titulo = f"⚠️ Fallo en reposición: {nombre_item}"
         mensaje = (
             f"📌 Elemento: {nombre_item} (ID: '{id_item}')\n"
-            f"🔗 Enlace fallido: {tipo_enlace}\n"
-            f"🌐 URL: {url_caida}\n\n"
-            f"💡 Sugerencia: Revisá el catálogo para actualizar este mirror."
+            f"🔗 Enlace/Opción: {tipo_enlace}\n"
+            f"🌐 URL: {url_caida}\n"
+            f"❌ Motivo en terminal: {motivo_error}\n\n"
+            f"💡 Sugerencia: Revisá los archivos en GitHub o el mirror seleccionado."
         )
 
         req = urllib.request.Request(
@@ -93,10 +94,10 @@ def notificar_link_caido(id_item, nombre_item, url_caida, tipo_enlace="Principal
             headers={
                 "Title": titulo.encode('utf-8').decode('latin-1'),
                 "Priority": "high",
-                "Tags": "warning,game"
+                "Tags": "warning,game,terminal_error"
             }
         )
-        urllib.request.urlopen(req, timeout=2)
+        urllib.request.urlopen(req, timeout=3)
     except Exception:
         pass
 
