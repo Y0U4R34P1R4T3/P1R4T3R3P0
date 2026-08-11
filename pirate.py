@@ -16,7 +16,7 @@ REPO_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/jueg
 GITHUB_ISSUES_URL = "https://github.com/Y0U4R34P1R4T3/P1R4T3R3P0/issues/new?title="
 
 # Canal secreto de ntfy.sh para recibir notificaciones en tu celular
-NTFY_CHANNEL = "alertas_pirate_repo_2026_xyz"
+NTFY_CHANNEL = "LinuxRepoPirate"
 
 # Carpetas de contenido visibles en tu carpeta personal (~/PIRATE)
 PIRATE_DIR = os.path.expanduser("~/PIRATE")
