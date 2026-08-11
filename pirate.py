@@ -104,18 +104,29 @@ def notificar_error_instalacion(id_item, nombre_item, url_caida, tipo_enlace="Pr
         print(f"    [!] Ocurrió un inconveniente al enviar la alerta a ntfy: {e}")
 
 def resolver_url_descarga(url):
-    """Detecta enlaces de MediaFire y extrae la URL de descarga directa."""
+    """Detecta enlaces de MediaFire y extrae la URL de descarga directa de forma robusta."""
     if "mediafire.com" in url:
         print("    [*] Procesando enlace de MediaFire...")
         try:
             req = urllib.request.Request(
                 url, 
-                headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)'}
+                headers={
+                    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0',
+                    'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
+                }
             )
-            html = urllib.request.urlopen(req, timeout=10).read().decode('utf-8')
+            html = urllib.request.urlopen(req, timeout=10).read().decode('utf-8', errors='ignore')
+            
+            # Intento 1: Buscar botón directo de descarga
             match = re.search(r'href="(https?://download[^"]+)"', html)
             if match:
                 return match.group(1)
+            
+            # Intento 2: Atributo aria-label alternativo
+            match_alt = re.search(r'aria-label="Download file"\s+href="([^"]+)"', html)
+            if match_alt:
+                return match_alt.group(1)
+
         except Exception as e:
             print(f"    [!] No se pudo resolver la URL de MediaFire: {e}")
     return url
@@ -129,7 +140,7 @@ def verificar_enlace_activo(url):
         req = urllib.request.Request(
             url, 
             method='HEAD',
-            headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)'}
+            headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0'}
         )
         with urllib.request.urlopen(req, timeout=5) as response:
             return response.status in [200, 301, 302]
@@ -351,11 +362,23 @@ def install_juego(id_juego):
     print(f"\n[*] Descargando desde fuente {etiqueta_elegida}...")
     descarga_exitosa = ejecutar_descarga(url_real, archive_path)
 
-    if not descarga_exitosa or not os.path.exists(archive_path) or os.path.getsize(archive_path) < 1024:
-        print(f"\n[X] Falló la descarga desde la opción seleccionada.")
+    # Validar si el archivo es HTML o si es corrupto/vacío (<10KB)
+    es_html = False
+    if os.path.exists(archive_path):
+        try:
+            with open(archive_path, 'rb') as f:
+                inicio = f.read(100)
+                if b'<!doctype html>' in inicio.lower() or b'<html' in inicio.lower():
+                    es_html = True
+        except Exception:
+            pass
+
+    if not descarga_exitosa or not os.path.exists(archive_path) or os.path.getsize(archive_path) < 10240 or es_html:
+        print(f"\n[X] Falló la descarga desde la opción seleccionada (Archivo bloqueado o corrupto por MediaFire/servidor).")
+        motivo = "MediaFire devolvió una página HTML de captcha/bloqueo." if es_html else "Descarga incompleta o archivo corrupto (<10KB)."
         notificar_error_instalacion(
             id_juego, nombre_item, url_elegida, etiqueta_elegida,
-            motivo_error="Descarga incompleta, fallida o archivo corrupto (<1KB)."
+            motivo_error=motivo
         )
         if os.path.exists(archive_path):
             os.remove(archive_path)
