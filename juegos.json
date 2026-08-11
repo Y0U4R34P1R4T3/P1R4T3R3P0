@@ -5,10 +5,6 @@
     "version": "3.2 hotfix | Full Version + All DLCs",
     "url": "https://archive.org/download/204360/Castle.Crashers-SteamRIP.com.rar",
     "ejecutable": "castle.exe",
-    "mirrors": [
-      "https://httpbin.org/status/404",
-      "https://https://falso-link-caido-para-pruebas-123.com/juego.tar.gz",
-      "https://10.255.255.1/test.tar.gz"
-    ]
+    "mirrors": []
   }
 }
