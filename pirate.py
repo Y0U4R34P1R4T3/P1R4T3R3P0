@@ -15,7 +15,7 @@ SCRIPT_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/pi
 REPO_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/juegos.json"
 GITHUB_ISSUES_URL = "https://github.com/Y0U4R34P1R4T3/P1R4T3R3P0/issues/new?title="
 
-# Canal secreto de ntfy.sh para recibir notificaciones en tu celular
+# Canal de ntfy.sh para recibir notificaciones en tu celular
 NTFY_CHANNEL = "LinuxRepoPirate"
 
 # Carpetas de contenido visibles en tu carpeta personal (~/PIRATE)
@@ -29,7 +29,7 @@ LOCAL_CATALOG = os.path.join(DATA_DIR, "juegos.json")
 INSTALLED_GAMES_FILE = os.path.join(DATA_DIR, "installed.json")
 WELCOME_FLAG_FILE = os.path.join(DATA_DIR, ".welcome_done")
 
-def instilar_aria2_si_falta():
+def instalar_aria2_si_falta():
     """Instala automáticamente aria2c si no se encuentra en el sistema."""
     if not shutil.which("aria2c"):
         print("[*] 'aria2' no está instalado. Instalándolo automáticamente para optimizar descargas...")
@@ -94,12 +94,14 @@ def notificar_error_instalacion(id_item, nombre_item, url_caida, tipo_enlace="Pr
             headers={
                 "Title": titulo.encode('utf-8').decode('latin-1'),
                 "Priority": "high",
-                "Tags": "warning,game,terminal_error"
+                "Tags": "warning,game,terminal_error",
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"
             }
         )
-        urllib.request.urlopen(req, timeout=3)
-    except Exception:
-        pass
+        urllib.request.urlopen(req, timeout=5)
+        print("    [✓] Alerta de fallo enviada a tu celular vía ntfy.")
+    except Exception as e:
+        print(f"    [!] Ocurrió un inconveniente al enviar la alerta a ntfy: {e}")
 
 def resolver_url_descarga(url):
     """Detecta enlaces de MediaFire y extrae la URL de descarga directa."""
@@ -136,7 +138,7 @@ def verificar_enlace_activo(url):
 
 def ejecutar_descarga(url_real, destino_archivo):
     """Descarga el archivo usando aria2c (instala si no está) o cae en wget."""
-    instilar_aria2_si_falta()
+    instalar_aria2_si_falta()
 
     if shutil.which("aria2c"):
         print("    [*] Usando motor de descarga acelerado (aria2c)...")
@@ -150,7 +152,7 @@ def ejecutar_descarga(url_real, destino_archivo):
 
 def manejar_torrent_cli(url_origen, directorio_destino, nombre_item):
     """Maneja la descarga de magnets o torrents en terminal instalando aria2c si hace falta."""
-    instilar_aria2_si_falta()
+    instalar_aria2_si_falta()
 
     if shutil.which("aria2c"):
         print(f"[*] Iniciando cliente Torrent en terminal con aria2c para '{nombre_item}'...")
@@ -321,14 +323,20 @@ def install_juego(id_juego):
         os.makedirs(game_dir, exist_ok=True)
         exito = manejar_torrent_cli(url_elegida, game_dir, nombre_item)
         if not exito:
-            notificar_error_instalacion(id_juego, nombre_item, url_elegida, etiqueta_elegida)
+            notificar_error_instalacion(
+                id_juego, nombre_item, url_elegida, etiqueta_elegida,
+                motivo_error="Falló la descarga del torrent/magnet (sin semillas o interrupción)."
+            )
         return
 
     url_real = resolver_url_descarga(url_elegida)
 
     if not verificar_enlace_activo(url_real):
         print(f"\n[X] El enlace seleccionado no responde o está caído.")
-        notificar_error_instalacion(id_juego, nombre_item, url_elegida, etiqueta_elegida)
+        notificar_error_instalacion(
+            id_juego, nombre_item, url_elegida, etiqueta_elegida,
+            motivo_error="Servidor caído / Error HTTP (404, 500 o Timeout)."
+        )
         print("Probá ejecutando el comando de nuevo y seleccionando otro mirror.")
         return
 
@@ -345,7 +353,10 @@ def install_juego(id_juego):
 
     if not descarga_exitosa or not os.path.exists(archive_path) or os.path.getsize(archive_path) < 1024:
         print(f"\n[X] Falló la descarga desde la opción seleccionada.")
-        notificar_error_instalacion(id_juego, nombre_item, url_elegida, etiqueta_elegida)
+        notificar_error_instalacion(
+            id_juego, nombre_item, url_elegida, etiqueta_elegida,
+            motivo_error="Descarga incompleta, fallida o archivo corrupto (<1KB)."
+        )
         if os.path.exists(archive_path):
             os.remove(archive_path)
         return
@@ -362,6 +373,10 @@ def install_juego(id_juego):
 
     if res_extraer.returncode != 0:
         print("[X] Ocurrió un error al descomprimir el archivo.")
+        notificar_error_instalacion(
+            id_juego, nombre_item, url_elegida, etiqueta_elegida,
+            motivo_error=f"Error en extracción ({extension}) - Código de retorno: {res_extraer.returncode}."
+        )
 
     if os.path.exists(archive_path):
         os.remove(archive_path)
@@ -371,6 +386,11 @@ def install_juego(id_juego):
         ejecutable_path = os.path.join(game_dir, ejecutable_relativo)
         if os.path.exists(ejecutable_path):
             os.chmod(ejecutable_path, 0o755)
+        else:
+            notificar_error_instalacion(
+                id_juego, nombre_item, url_elegida, etiqueta_elegida,
+                motivo_error=f"Falta ejecutable: No se halló '{ejecutable_relativo}' tras descompresión."
+            )
 
     instalados = {}
     if os.path.exists(INSTALLED_GAMES_FILE):
