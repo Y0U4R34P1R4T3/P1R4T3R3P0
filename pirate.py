@@ -7,11 +7,16 @@ import urllib.request
 import urllib.parse
 import subprocess
 import webbrowser
+import re
+import shutil
 
 # Configura las URLs del repositorio
 SCRIPT_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/pirate.py"
 REPO_URL = "https://raw.githubusercontent.com/Y0U4R34P1R4T3/P1R4T3R3P0/main/juegos.json"
 GITHUB_ISSUES_URL = "https://github.com/Y0U4R34P1R4T3/P1R4T3R3P0/issues/new?title="
+
+# Canal secreto de ntfy.sh para recibir notificaciones en tu celular
+NTFY_CHANNEL = "alertas_pirate_repo_2026_xyz"
 
 # Carpetas de contenido visibles en tu carpeta personal (~/PIRATE)
 PIRATE_DIR = os.path.expanduser("~/PIRATE")
@@ -23,6 +28,22 @@ DATA_DIR = os.path.expanduser("~/.local/share/pirate")
 LOCAL_CATALOG = os.path.join(DATA_DIR, "juegos.json")
 INSTALLED_GAMES_FILE = os.path.join(DATA_DIR, "installed.json")
 WELCOME_FLAG_FILE = os.path.join(DATA_DIR, ".welcome_done")
+
+def instilar_aria2_si_falta():
+    """Instala automáticamente aria2c si no se encuentra en el sistema."""
+    if not shutil.which("aria2c"):
+        print("[*] 'aria2' no está instalado. Instalándolo automáticamente para optimizar descargas...")
+        try:
+            if shutil.which("apt"):
+                subprocess.run(["sudo", "apt", "update", "-y"], check=False)
+                subprocess.run(["sudo", "apt", "install", "-y", "aria2"], check=False)
+            elif shutil.which("pacman"):
+                subprocess.run(["sudo", "pacman", "-S", "--noconfirm", "aria2"], check=False)
+            elif shutil.which("dnf"):
+                subprocess.run(["sudo", "dnf", "install", "-y", "aria2"], check=False)
+        except Exception as e:
+            print(f"[!] No se pudo instalar 'aria2' automáticamente: {e}")
+            print("[!] Se usará 'wget' como motor de respaldo.")
 
 def asegurar_carpetas():
     """Crea la estructura de carpetas y muestra el mensaje de bienvenida en la primera instalación."""
@@ -52,10 +73,101 @@ def cargar_catalogo_local():
         print(f"[X] Error insospechado al leer el catálogo: {e}")
         sys.exit(1)
 
+def notificar_link_caido(id_item, nombre_item, url_caida, tipo_enlace="Principal"):
+    """Envía una notificación push detallada al celular del owner vía ntfy.sh."""
+    if not NTFY_CHANNEL:
+        return
+
+    try:
+        titulo = f"⚠️ Link Caído: {nombre_item}"
+        mensaje = (
+            f"📌 Elemento: {nombre_item} (ID: '{id_item}')\n"
+            f"🔗 Enlace fallido: {tipo_enlace}\n"
+            f"🌐 URL: {url_caida}\n\n"
+            f"💡 Sugerencia: Revisá el catálogo para actualizar este mirror."
+        )
+
+        req = urllib.request.Request(
+            f"https://ntfy.sh/{NTFY_CHANNEL}",
+            data=mensaje.encode('utf-8'),
+            headers={
+                "Title": titulo.encode('utf-8').decode('latin-1'),
+                "Priority": "high",
+                "Tags": "warning,game"
+            }
+        )
+        urllib.request.urlopen(req, timeout=2)
+    except Exception:
+        pass
+
+def resolver_url_descarga(url):
+    """Detecta enlaces de MediaFire y extrae la URL de descarga directa."""
+    if "mediafire.com" in url:
+        print("    [*] Procesando enlace de MediaFire...")
+        try:
+            req = urllib.request.Request(
+                url, 
+                headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)'}
+            )
+            html = urllib.request.urlopen(req, timeout=10).read().decode('utf-8')
+            match = re.search(r'href="(https?://download[^"]+)"', html)
+            if match:
+                return match.group(1)
+        except Exception as e:
+            print(f"    [!] No se pudo resolver la URL de MediaFire: {e}")
+    return url
+
+def verificar_enlace_activo(url):
+    """Verifica mediante una petición HEAD si el enlace responde antes de descargar."""
+    if url.startswith("magnet:"):
+        return True
+
+    try:
+        req = urllib.request.Request(
+            url, 
+            method='HEAD',
+            headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)'}
+        )
+        with urllib.request.urlopen(req, timeout=5) as response:
+            return response.status in [200, 301, 302]
+    except Exception:
+        return False
+
+def ejecutar_descarga(url_real, destino_archivo):
+    """Descarga el archivo usando aria2c (instala si no está) o cae en wget."""
+    instilar_aria2_si_falta()
+
+    if shutil.which("aria2c"):
+        print("    [*] Usando motor de descarga acelerado (aria2c)...")
+        cmd = f"aria2c -x 8 -s 8 --summary-interval=1 -o '{os.path.basename(destino_archivo)}' -d '{os.path.dirname(destino_archivo)}' '{url_real}'"
+        res = os.system(cmd)
+        return res == 0
+    else:
+        print("    [*] Usando motor de descarga estándar (wget)...")
+        res = os.system(f"wget -q --show-progress -O '{destino_archivo}' '{url_real}'")
+        return res == 0
+
+def manejar_torrent_cli(url_origen, directorio_destino, nombre_item):
+    """Maneja la descarga de magnets o torrents en terminal instalando aria2c si hace falta."""
+    instilar_aria2_si_falta()
+
+    if shutil.which("aria2c"):
+        print(f"[*] Iniciando cliente Torrent en terminal con aria2c para '{nombre_item}'...")
+        cmd = f"aria2c --dir='{directorio_destino}' --seed-time=0 --summary-interval=1 '{url_origen}'"
+        res = os.system(cmd)
+        return res == 0
+    else:
+        print("[!] Intentando abrir en el cliente predeterminado del sistema...")
+        try:
+            subprocess.run(["xdg-open", url_origen])
+            return True
+        except Exception as e:
+            print(f"[X] Error al abrir el torrent: {e}")
+            return False
+
 # --- COMANDOS ---
 
 def listar_catalogo_generico(archivo_json, tipo_filtro=None, titulo_categoria="Contenido"):
-    """Función genérica para listar y filtrar por la propiedad 'tipo' del JSON."""
     if not os.path.exists(archivo_json):
         print(f"[!] No se encontró el catálogo. Ejecutá 'pirate update' primero.")
         return
@@ -76,7 +188,6 @@ def listar_catalogo_generico(archivo_json, tipo_filtro=None, titulo_categoria="C
     for key, info in catalogo.items():
         tipo_item = info.get('tipo', 'juego').lower()
         
-        # Si tipo_filtro es None se muestran todos, de lo contrario filtra por categoría
         if tipo_filtro is None or tipo_item == tipo_filtro.lower():
             nombre = info.get('nombre', key)
             version = info.get('version', '')
@@ -90,44 +201,35 @@ def listar_catalogo_generico(archivo_json, tipo_filtro=None, titulo_categoria="C
     print()
 
 def list_juegos():
-    """[pirate listgames] Muestra solo los juegos."""
     listar_catalogo_generico(LOCAL_CATALOG, tipo_filtro="juego", titulo_categoria="Juegos")
 
 def list_movies():
-    """[pirate listmovies] Muestra solo las películas."""
     listar_catalogo_generico(LOCAL_CATALOG, tipo_filtro="pelicula", titulo_categoria="Películas")
 
 def list_series():
-    """[pirate listseries] Muestra solo las series."""
     listar_catalogo_generico(LOCAL_CATALOG, tipo_filtro="serie", titulo_categoria="Series")
 
 def list_all():
-    """[pirate listall] Muestra todo el catálogo disponible."""
     print("\n==========================================")
     print("         CATÁLOGO GENERAL DE PIRATE        ")
     print("==========================================")
     listar_catalogo_generico(LOCAL_CATALOG, tipo_filtro=None, titulo_categoria="Todo el Contenido")
 
 def update_catalogo():
-    """[pirate update] Descarga la última versión del catálogo y del propio script."""
     asegurar_carpetas()
     print("☠ Surcando los mares del repositorio...")
     
     cache_buster = f"?t={int(time.time())}"
 
     try:
-        # 1. Actualizar catálogo de juegos
         req = urllib.request.urlopen(REPO_URL + cache_buster)
         data = req.read().decode('utf-8')
-        
-        # Validar que sea un JSON válido
         json.loads(data)
         
         with open(LOCAL_CATALOG, 'w', encoding='utf-8') as f:
             f.write(data)
         print("☠ Se han actualizado los mapas del tesoro!")
 
-        # 2. Auto-actualizar pirate.py
         print("☠ Verificando que el barco esté en buen estado...")
         script_url = f"{SCRIPT_URL}{cache_buster}"
         req_script = urllib.request.urlopen(script_url)
@@ -146,7 +248,6 @@ def update_catalogo():
         print(f"[X] Error al actualizar: {e}")
 
 def search_juegos(query=""):
-    """[pirate search] Busca elementos en el catálogo local."""
     catalogo = cargar_catalogo_local()
     print(f"\n--- Resultados de búsqueda para '{query}' ---")
     encontrados = 0
@@ -163,7 +264,6 @@ def search_juegos(query=""):
     print()
 
 def install_juego(id_juego):
-    """[pirate install] Descarga e instala un juego manejando múltiples formatos de compresión."""
     asegurar_carpetas()
     catalogo = cargar_catalogo_local()
     
@@ -173,31 +273,80 @@ def install_juego(id_juego):
         return
 
     info = catalogo[id_juego]
-    print(f"[*] Preparando la instalación de: {info.get('nombre', id_juego)} (v{info.get('version', '')})")
+    nombre_item = info.get('nombre', id_juego)
+    tipo_item = info.get('tipo', 'juego').lower()
 
-    fuentes = [info['url']] + info.get('mirrors', [])
-    descarga_exitosa = False
-    
-    url_principal = info['url']
+    destino_base = MOVIES_DIR if tipo_item in ['pelicula', 'serie'] else GAMES_DIR
+    game_dir = os.path.join(destino_base, id_juego)
+
+    opciones = [("Principal", info['url'])]
+    for idx, mirror_url in enumerate(info.get('mirrors', []), start=1):
+        opciones.append((f"Mirror #{idx}", mirror_url))
+
+    print(f"\n==========================================")
+    print(f"   Instalación de: {nombre_item} (v{info.get('version', '1.0')})")
+    print(f"==========================================")
+    print("Seleccioná la fuente de descarga que preferís:\n")
+
+    for idx, (etiqueta_fuente, url) in enumerate(opciones, start=1):
+        tipo_host = "Directa"
+        if "mediafire.com" in url:
+            tipo_host = "MediaFire"
+        elif "buzzheavier.com" in url:
+            tipo_host = "Buzzheavier"
+        elif "gofile.io" in url:
+            tipo_host = "GoFile"
+        elif "megadb.net" in url:
+            tipo_host = "MegaDB"
+        elif url.startswith("magnet:"):
+            tipo_host = "Torrent (Magnet)"
+        elif url.endswith(".torrent"):
+            tipo_host = "Torrent (Archivo)"
+
+        print(f"  [{idx}] {tipo_host} [{etiqueta_fuente}] -> {url[:60]}...")
+
+    try:
+        eleccion = int(input("\nIngresá el número de opción: ")) - 1
+        if eleccion < 0 or eleccion >= len(opciones):
+            print("[!] Opción no válida. Cancelando instalación.")
+            return
+    except ValueError:
+        print("[!] Entrada no válida. Debe ser un número.")
+        return
+
+    etiqueta_elegida, url_elegida = opciones[eleccion]
+
+    if url_elegida.startswith("magnet:") or url_elegida.endswith(".torrent"):
+        os.makedirs(game_dir, exist_ok=True)
+        exito = manejar_torrent_cli(url_elegida, game_dir, nombre_item)
+        if not exito:
+            notificar_link_caido(id_juego, nombre_item, url_elegida, etiqueta_elegida)
+        return
+
+    url_real = resolver_url_descarga(url_elegida)
+
+    if not verificar_enlace_activo(url_real):
+        print(f"\n[X] El enlace seleccionado no responde o está caído.")
+        notificar_link_caido(id_juego, nombre_item, url_elegida, etiqueta_elegida)
+        print("Probá ejecutando el comando de nuevo y seleccionando otro mirror.")
+        return
+
     extension = ".tar.gz"
-    if url_principal.endswith(".rar"):
+    if url_real.endswith(".rar"):
         extension = ".rar"
-    elif url_principal.endswith(".zip"):
+    elif url_real.endswith(".zip"):
         extension = ".zip"
 
-    archive_path = os.path.join(GAMES_DIR, f"{id_juego}{extension}")
-    game_dir = os.path.join(GAMES_DIR, id_juego)
+    archive_path = os.path.join(destino_base, f"{id_juego}{extension}")
 
-    for url in fuentes:
-        print(f"[*] Descargando desde: {url}")
-        res = os.system(f"wget -q --show-progress -O '{archive_path}' '{url}'")
-        if res == 0:
-            descarga_exitosa = True
-            break
-        print("[!] Enlace caído o no disponible, intentando con mirror de respaldo...")
+    print(f"\n[*] Descargando desde fuente {etiqueta_elegida}...")
+    descarga_exitosa = ejecutar_descarga(url_real, archive_path)
 
-    if not descarga_exitosa:
-        print("[X] Error: No se pudo descargar desde ninguna fuente.")
+    if not descarga_exitosa or not os.path.exists(archive_path) or os.path.getsize(archive_path) < 1024:
+        print(f"\n[X] Falló la descarga desde la opción seleccionada.")
+        notificar_link_caido(id_juego, nombre_item, url_elegida, etiqueta_elegida)
+        if os.path.exists(archive_path):
+            os.remove(archive_path)
         return
 
     print(f"[*] Descomprimiendo archivos en {game_dir}...")
@@ -234,10 +383,9 @@ def install_juego(id_juego):
     with open(INSTALLED_GAMES_FILE, 'w') as f:
         json.dump(instalados, f, indent=2)
 
-    print(f"\n[✓] ¡{info.get('nombre', id_juego)} listo para disfrutar!")
+    print(f"\n[✓] ¡{nombre_item} listo para disfrutar!")
 
 def upgrade_juegos():
-    """[pirate upgrade] Revisa actualizaciones del contenido instalado."""
     if not os.path.exists(INSTALLED_GAMES_FILE):
         print("[*] No hay contenido instalado actualmente.")
         return
@@ -260,7 +408,6 @@ def upgrade_juegos():
         print("[✓] Todo tu contenido está en la última versión disponible.")
 
 def request_juego(nombre_juego):
-    """[pirate request] Abre la página de GitHub para pedir un contenido."""
     print(f"[*] Abriendo navegador para solicitar: '{nombre_juego}'...")
     query_string = urllib.parse.quote(f"Request: {nombre_juego}")
     url = f"{GITHUB_ISSUES_URL}{query_string}"
