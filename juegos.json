@@ -1,5 +1,5 @@
 {
-  "Castle Crashers": {
+  "castle_crashers": {
     "nombre": "Castle Crashers",
     "tipo": "juego",
     "version": "3.2 hotfix | Full Version + All DLCs",
@@ -8,15 +8,13 @@
     "mirrors": [
       "https://www.mediafire.com/file/dtf2rc2l5qs7pbl/Castle+Crashers_v3.0_ElEnemigos.rar/file"
     ]
-  }
-  "DOOM I + II": {
+  },
+  "doom_1_2": {
     "nombre": "DOOM I + II",
     "tipo": "juego",
     "version": "v1.9 (28044) | Updated Version",
     "url": "magnet:?xt=urn:btih:0F3F3C9B835CD5AEAFA70F4214F24329B14DC43B&dn=DOOM+I+%2B+II+%28v2265%2C+MULTi13%29+%5BFitGirl+Repack%5D&tr=udp%3A%2F%2Fopentor.net%3A6969&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=http%3A%2F%2Ftracker.gbitt.info%3A80%2Fannounce&tr=http%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.ccp.ovh%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.theoks.net%3A6969%2Fannounce&tr=https%3A%2F%2Ftracker.tamersunion.org%3A443%2Fannounce&tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&tr=http%3A%2F%2Fopen.acgtracker.com%3A1096%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce",
-    "ejecutable": "",
-    "mirrors": [
-      ""
-    ]
+    "ejecutable": "setup.exe",
+    "mirrors": []
   }
 }
